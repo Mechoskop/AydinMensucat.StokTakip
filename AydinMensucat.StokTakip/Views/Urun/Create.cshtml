@@ -1,0 +1,102 @@
+@model AydinMensucat.StokTakip.Models.Urun
+
+@{
+    ViewData["Title"] = "Yeni Ürün Ekle";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Yeni ",
+    VurguMetin = "Ürün Ekle",
+    AltBaslik = "Depoya yeni bir stok kartı oluştur"
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="KategoriId" class="control-label text-muted small fw-semibold">KATEGORİ</label>
+                        <select asp-for="KategoriId" class="form-select bg-dark text-light border-secondary" asp-items="ViewBag.KategoriId">
+                            <option value="">Kategori Seçiniz</option>
+                        </select>
+                        <span asp-validation-for="KategoriId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="TedarikciId" class="control-label text-muted small fw-semibold">TEDARİKÇİ FİRMA</label>
+                        <select asp-for="TedarikciId" class="form-select bg-dark text-light border-secondary" asp-items="ViewBag.Tedarikciler">
+                            <option value="">İsteğe Bağlı</option>
+                        </select>
+                        <span asp-validation-for="TedarikciId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="UrunAdi" class="control-label text-muted small fw-semibold">ÜRÜN ADI</label>
+                    <input asp-for="UrunAdi" class="form-control bg-dark text-light border-secondary" placeholder="Örn: Cat6 Ethernet Kablosu" />
+                    <span asp-validation-for="UrunAdi" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="Marka" class="control-label text-muted small fw-semibold">MARKA</label>
+                        <input asp-for="Marka" class="form-control bg-dark text-light border-secondary" placeholder="Örn: Schneider" />
+                        <span asp-validation-for="Marka" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="Model" class="control-label text-muted small fw-semibold">MODEL</label>
+                        <input asp-for="Model" class="form-control bg-dark text-light border-secondary" placeholder="Örn: 100m Kutu" />
+                        <span asp-validation-for="Model" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Departman" class="control-label text-muted small fw-semibold">DEPARTMAN</label>
+                    <input asp-for="Departman" class="form-control bg-dark text-light border-secondary" placeholder="Örn: IT, Muhasebe, Üretim..." />
+                    <span asp-validation-for="Departman" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Ozellikler" class="control-label text-muted small fw-semibold">ÖZELLİKLER</label>
+                    <input asp-for="Ozellikler" class="form-control bg-dark text-light border-secondary" placeholder="Örn: 23AWG Bakır Kablo" />
+                    <span asp-validation-for="Ozellikler" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="StokMiktari" class="control-label text-muted small fw-semibold">STOK MİKTARI</label>
+                        <input asp-for="StokMiktari" class="form-control bg-dark text-light border-secondary" />
+                        <span asp-validation-for="StokMiktari" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="Birim" class="control-label text-muted small fw-semibold">BİRİM</label>
+                        <input asp-for="Birim" class="form-control bg-dark text-light border-secondary" placeholder="Adet, Metre, Paket..." />
+                        <span asp-validation-for="Birim" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="islemTarihi" class="control-label small fw-bold text-sari">İŞLEM / GİRİŞ TARİHİ (Geçmiş Tarih Seçilebilir)</label>
+                    <input type="date" name="islemTarihi" class="form-control bg-dark text-light border-secondary" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <small class="text-muted">İstediğiniz geçmiş bir tarihi seçerek bu tarihe ait stok hareketi oluşturabilirsiniz.</small>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4"><i class="bi bi-check-circle"></i> Kaydet</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary text-light"><i class="bi bi-arrow-left"></i> Listeye Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

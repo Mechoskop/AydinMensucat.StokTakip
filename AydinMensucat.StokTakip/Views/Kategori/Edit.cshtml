@@ -1,0 +1,45 @@
+@model AydinMensucat.StokTakip.Models.Kategori
+@{
+    ViewData["Title"] = "Kategori Düzenle";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Kategori ",
+    VurguMetin = "Düzenle"
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4">
+            <form asp-action="Edit">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="KategoriAdi" class="control-label text-muted small fw-semibold">KATEGORİ ADI</label>
+                    <input asp-for="KategoriAdi" class="form-control bg-dark text-light border-secondary" />
+                    <span asp-validation-for="KategoriAdi" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Aciklama" class="control-label text-muted small fw-semibold">AÇIKLAMA</label>
+                    <input asp-for="Aciklama" class="form-control bg-dark text-light border-secondary" />
+                    <span asp-validation-for="Aciklama" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4">Kaydet</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

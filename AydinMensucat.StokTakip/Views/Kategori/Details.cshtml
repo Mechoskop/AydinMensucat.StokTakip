@@ -1,0 +1,44 @@
+@model AydinMensucat.StokTakip.Models.Kategori
+@{
+    ViewData["Title"] = "Kategori Detayı";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = Model.KategoriAdi,
+    AltBaslik = "Kategori Detayı"
+})
+<hr class="dikis-cizgi" />
+
+<div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4 mb-4" style="max-width: 500px;">
+    <p class="mb-0"><strong class="text-muted">Açıklama:</strong> <span class="text-light">@Model.Aciklama</span></p>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning text-dark fw-bold">Düzenle</a>
+<a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+
+<h5 class="font-baslik mt-5 mb-3">Bu Kategorideki Ürünler</h5>
+@if (!Model.Urunler.Any())
+{
+    <p class="text-muted">Bu kategoride henüz ürün yok.</p>
+}
+else
+{
+    <div class="card bg-transparent border-secondary shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-dark align-middle mb-0" style="--bs-table-bg: transparent;">
+            <thead class="text-muted small border-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">
+                <tr><th class="ps-3 py-3">ÜRÜN</th><th class="py-3">STOK</th><th class="pe-3 py-3">DEPARTMAN</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Urunler)
+                {
+                    <tr class="border-secondary">
+                        <td class="ps-3 text-light">@u.UrunAdi</td>
+                        <td class="text-light">@u.StokMiktari @u.Birim</td>
+                        <td class="pe-3 text-light">@u.Departman</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

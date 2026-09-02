@@ -1,0 +1,20 @@
+﻿@model AydinMensucat.StokTakip.Models.SayfaBasligiModel
+
+@if (Model.Tehlike)
+{
+    <h2 class="font-baslik text-danger mb-1">@Model.DuzMetin</h2>
+}
+else
+{
+    <h2 class="font-baslik mb-1">
+        @Model.DuzMetin@if (!string.IsNullOrEmpty(Model.VurguMetin))
+        {
+            <span class="text-sari fst-italic">@Model.VurguMetin</span>
+        }
+    </h2>
+}
+
+@if (!string.IsNullOrEmpty(Model.AltBaslik))
+{
+    <small class="text-muted">@Model.AltBaslik</small>
+}

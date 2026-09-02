@@ -1,0 +1,53 @@
+﻿@model AydinMensucat.StokTakip.Models.Musteri
+@{
+    ViewData["Title"] = "Müşteri Detayı";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = Model.MusteriAdi,
+    AltBaslik = "Müşteri Detayı"
+})
+<hr class="dikis-cizgi" />
+
+<div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4 mb-4" style="max-width: 500px;">
+    <p class="mb-2"><strong class="text-muted">Yetkili Kişi:</strong> <span class="text-light">@Model.YetkiliKisi</span></p>
+    <p class="mb-2"><strong class="text-muted">Telefon:</strong> <span class="text-light">@Model.Telefon</span></p>
+    <p class="mb-0"><strong class="text-muted">Adres:</strong> <span class="text-light">@Model.Adres</span></p>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning text-dark fw-bold">Düzenle</a>
+<a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+
+<h5 class="font-baslik mt-5 mb-3">Hareket <span class="text-sari fst-italic">Geçmişi</span></h5>
+
+@if (!Model.StokHareketleri.Any())
+{
+    <p class="text-muted">Bu müşteriye ait henüz bir stok çıkışı yapılmamış.</p>
+}
+else
+{
+    <div class="card bg-transparent border-secondary shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-dark align-middle mb-0" style="--bs-table-bg: transparent;">
+            <thead class="text-muted small border-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">
+                <tr>
+                    <th class="ps-3 py-3">ÜRÜN ADI</th>
+                    <th class="py-3">İŞLEM TÜRÜ</th>
+                    <th class="py-3">MİKTAR</th>
+                    <th class="pe-3 py-3">TARİH</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in Model.StokHareketleri.OrderByDescending(h => h.Tarih))
+                {
+                    <tr class="border-secondary">
+                        <td class="ps-3 text-light">@h.UrunAdi</td>
+                        <td><span class="durum-hap durum-musteri">@h.IslemTuru</span></td>
+                        <td><span style="font-family: var(--font-mono); font-weight: 700;" class="text-light">@h.Miktar</span></td>
+                        <td class="pe-3"><span class="text-light small">@h.Tarih.ToString("dd.MM.yyyy HH:mm")</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

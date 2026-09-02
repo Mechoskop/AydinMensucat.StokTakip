@@ -1,0 +1,56 @@
+@model AydinMensucat.StokTakip.Models.Urun
+
+@{
+    ViewData["Title"] = "Ürün Sil";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Ürün Sil",
+    Tehlike = true,
+    AltBaslik = "Bu ürünü silmek istediğinize emin misiniz?"
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-transparent border-secondary text-light shadow-sm rounded-4 p-4 mb-4">
+            <dl class="row mb-0">
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Kategori)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Kategori.KategoriAdi)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">Tedarikçi Firma</dt>
+                <dd class="col-sm-8">@(Model.Tedarikci != null ? Model.Tedarikci.SirketAdi : "-")</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.UrunAdi)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.UrunAdi)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Marka)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Marka)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Model)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Model)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Ozellikler)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Ozellikler)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.StokMiktari)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.StokMiktari)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Birim)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Birim)</dd>
+
+                <dt class="col-sm-4 fw-semibold text-muted">@Html.DisplayNameFor(model => model.Departman)</dt>
+                <dd class="col-sm-8">@Html.DisplayFor(model => model.Departman)</dd>
+            </dl>
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-outline-danger fw-bold px-4">Sil</button>
+                <a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,407 @@
+@model IEnumerable<AydinMensucat.StokTakip.Models.Urun>
+
+@{
+    ViewData["Title"] = "Ana Dashboard";
+    // Rol bilgisini önce ViewBag'den, orada yoksa doğrudan Session'dan okuyoruz.
+    // (İkisi de UrunController.Index'te dolduruluyor, bu sadece bir güvenlik ağı.)
+    string userRole = ViewBag.UserRole as string ?? Context.Session.GetString("UserRole") ?? "";
+}
+
+<!-- Özel Stiller: Koyu tema uyumlu hover ve buton ayarları -->
+<style>
+    .table-custom-dark tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .btn-group .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15.5px;
+        font-weight: 600;
+    }
+</style>
+
+<!-- 1. ÜST BAŞLIK, MİNİMAL TEK SATIR KUTUCUKLAR VE SAĞDA BUTONLAR -->
+<div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+    <!-- Sol Taraf: Başlık ve Yanında Minimal Kutucuklar -->
+    <div class="d-flex align-items-end gap-3">
+        <div>
+            @await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+            {
+                DuzMetin = "Bugünkü ",
+                VurguMetin = "stok kartelası",
+                AltBaslik = "Aydın Mensucat Depo ve Envanter Yönetim Paneli"
+            })
+        </div>
+
+        <!-- Başlığın Hemen Sağındaki Minimal Tek Satır Kutucuklar -->
+        <div class="d-none d-lg-flex gap-2 mb-1">
+            <!-- Son İşlem Kutucuğu: UrunController.Index'te hesaplanan ViewData["SonIslemBilgisi"]'ni gösterir -->
+            <div class="bg-dark bg-opacity-50 px-3 py-2 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center gap-2" style="font-size: 11.5px; min-height: 38px;">
+                <i class="bi bi-clock-history text-warning fs-6"></i>
+                <span class="text-sari fw-semibold text-truncate" style="max-width: 230px;" title="@ViewData["SonIslemBilgisi"]">
+                    @ViewData["SonIslemBilgisi"]
+                </span>
+            </div>
+
+            <!-- Canlı Saat Kutucuğu: içeriği sunucudan gelmiyor, aşağıdaki JS ile saniyede bir güncelleniyor -->
+            <div class="bg-dark bg-opacity-50 px-3 py-2 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center gap-2" style="font-size: 11.5px; min-height: 38px;">
+                <i class="bi bi-calendar3 text-info fs-6"></i>
+                <span id="canliTarihSaat" class="text-light fw-semibold"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ Taraf: Sadece Butonlar (Excel ve Yeni Ürün) -->
+    <div class="d-flex gap-2">
+        <!-- Excel'e Aktar: geçerli arama/filtre değerlerini de query string olarak taşıyor,
+             böylece filtrelenmiş listeyi indirebiliyorsun, sadece tüm listeyi değil -->
+        <a asp-action="ExcelExport"
+           asp-route-searchString="@Context.Request.Query["searchString"]"
+           asp-route-departmanFiltre="@Context.Request.Query["departmanFiltre"]"
+           class="btn btn-outline-secondary btn-sm text-light border-secondary">
+            <i class="bi bi-file-earmark-excel me-1 text-success"></i> Excel'e Aktar
+        </a>
+        @if (userRole != "Izleyici")
+        {
+            <a asp-action="Create" class="btn btn-warning btn-sm fw-bold px-3 text-dark">
+                <i class="bi bi-plus-lg me-1"></i> Yeni Ürün
+            </a>
+        }
+    </div>
+</div>
+
+<!-- 2. İSTATİSTİK KARTLARI (3'lü Koyu Konsept) -->
+<div class="row g-3 mb-4">
+    <!-- 1. Kart: Kategori Bazlı Ürün Çeşidi Dağılımı -->
+    <div class="col-md-4">
+        <div class="card bg-transparent border-secondary h-100 rounded-4 text-light stat-kart" style="--stat-renk: var(--sari-vurgu);">
+            <div class="card-body d-flex flex-column justify-content-between p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold">TOPLAM ÜRÜN ÇEŞİDİ</span>
+                    <i class="bi bi-box-seam text-warning fs-5"></i>
+                </div>
+                <div class="bg-dark bg-opacity-50 rounded p-2 border border-secondary border-opacity-25 mt-auto">
+                    <div class="row text-center g-0 small">
+                        @* ViewData["KategoriCesitleri"] içindeki her eleman anonim bir tip (new { KategoriAdi, Sayi }),
+                           Razor'da doğrudan bu tipi tanımlayamadığımız için reflection (GetType/GetProperty) ile
+                           alan değerlerini okuyoruz. Kategori sayısı sabit olmadığı (kaç kategori varsa o kadar
+                           sütun açıldığı) için de son elemana border eklemiyoruz — döngü içindeki index/totalCount
+                           kontrolü bunun için. *@
+                        @if (ViewData["KategoriCesitleri"] is IEnumerable<object> kategoriler && kategoriler.Any())
+                        {
+                            int index = 0;
+                            int totalCount = kategoriler.Count();
+                            foreach (var kat in kategoriler)
+                            {
+                                var type = kat.GetType();
+                                var katAdi = type.GetProperty("KategoriAdi")?.GetValue(kat, null)?.ToString();
+                                var katSayi = type.GetProperty("Sayi")?.GetValue(kat, null)?.ToString();
+                                string borderClass = (index < totalCount - 1) ? "border-end border-secondary border-opacity-50" : "";
+                                <div class="col @borderClass px-1" title="@katAdi">
+                                    <span class="d-block text-muted text-truncate" style="font-size: 10.5px;">@katAdi</span>
+                                    <span class="fw-bold text-light" style="font-size: 15.5px;">@katSayi</span>
+                                </div>
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <div class="col text-muted small">Kategori yok</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Kart: Birim Bazlı Toplam Stok Miktarları (Adet/Kg/Metre/Rulo) -->
+    <div class="col-md-4">
+        <div class="card bg-transparent border-secondary h-100 rounded-4 text-light stat-kart" style="--stat-renk: var(--iplik-uretim);">
+            <div class="card-body d-flex flex-column justify-content-between p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold">STOK BİRİM DAĞILIMI</span>
+                    <i class="bi bi-pie-chart text-success fs-5"></i>
+                </div>
+                <div class="bg-dark bg-opacity-50 rounded p-2 border border-secondary border-opacity-25 mt-auto">
+                    <div class="row text-center g-0 small">
+                        <div class="col border-end border-secondary border-opacity-50">
+                            <span class="d-block text-muted" style="font-size: 10.5px;">ADET</span>
+                            <span class="fw-bold text-light" style="font-size: 15.5px;">@ViewData["ToplamAdet"]</span>
+                        </div>
+                        <div class="col border-end border-secondary border-opacity-50">
+                            <span class="d-block text-muted" style="font-size: 10.5px;">KG</span>
+                            <span class="fw-bold text-light" style="font-size: 15.5px;">@ViewData["ToplamKg"]</span>
+                        </div>
+                        <div class="col border-end border-secondary border-opacity-50">
+                            <span class="d-block text-muted" style="font-size: 10.5px;">METRE</span>
+                            <span class="fw-bold text-light" style="font-size: 15.5px;">@ViewData["ToplamMetre"]</span>
+                        </div>
+                        <div class="col">
+                            <span class="d-block text-muted" style="font-size: 10.5px;">RULO</span>
+                            <span class="fw-bold text-light" style="font-size: 15.5px;">@ViewData["ToplamRulo"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Kart: Departman Bazlı Ürün Çeşidi Dağılımı (en çok üründen aza, ilk 3 + Diğer) -->
+    <div class="col-md-4">
+        <div class="card bg-transparent border-secondary h-100 rounded-4 text-light stat-kart" style="--stat-renk: var(--iplik-depo);">
+            <div class="card-body d-flex flex-column justify-content-between p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold">DEPARTMAN DAĞILIMI</span>
+                    <i class="bi bi-diagram-3 fs-4" style="color: var(--iplik-depo);"></i>
+                </div>
+                <div class="bg-dark bg-opacity-50 rounded p-2 border border-secondary border-opacity-25 mt-auto">
+                    <div class="row text-center g-0 small">
+                        @{
+                            // Controller'da hazırlanan, ürün sayısına göre büyükten küçüğe sıralanmış
+                            // ilk 3 departman. Sabit "IT/Üretim/Depo" yazılmadığı için, kim en çok
+                            // ürüne sahipse otomatik olarak burada görünür.
+                            var top3Departman = ViewData["Top3Departmanlar"] as List<KeyValuePair<string, int>> ?? new List<KeyValuePair<string, int>>();
+                        }
+                        @foreach (var dep in top3Departman)
+                        {
+                            <div class="col border-end border-secondary border-opacity-50" title="@dep.Key">
+                                <span class="d-block text-muted text-truncate" style="font-size: 10.5px;">@dep.Key.ToUpper()</span>
+                                <span class="fw-bold text-light" style="font-size: 15.5px;">@dep.Value</span>
+                            </div>
+                        }
+                        <!-- "Diğer" kutusu: ilk 3'e girmeyen departmanların toplamı, üzerine gelince
+                             (Bootstrap popover ile) hangi departmanların dahil olduğu tooltip'te gösterilir -->
+                        <div class="col" style="cursor: pointer;">
+                            <span class="d-block text-muted text-decoration-underline" style="font-size: 10.5px;"
+                                  data-bs-toggle="popover" data-bs-trigger="hover focus"
+                                  data-bs-title="Diğer Departmanlar"
+                                  data-bs-content="@ViewData["DepDigerIsimleri"]">
+                                DİĞER ⓘ
+                            </span>
+                            <span class="fw-bold text-light" style="font-size: 15.5px;">@ViewData["DepDiger"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. FİLTRELEME ALANI -->
+<div class="card bg-transparent border-secondary shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <!-- method="get" bilinçli seçildi: arama/filtre sonucu URL'de göründüğü için
+             sayfa linklenebilir/paylaşılabilir hale geliyor (örn. link kopyalayıp gönderebilirsin) -->
+        <form asp-action="Index" method="get">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <input type="text" name="searchString" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ürün adı, marka veya modele göre ara..." value="@Context.Request.Query["searchString"]" />
+                </div>
+                <div class="col-md-4">
+                    <select name="departmanFiltre" class="form-select form-select-sm bg-dark text-light border-secondary" asp-items="ViewBag.Departmanlar">
+                        <option value="">Tüm Departmanlar</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1">Filtrele</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm text-light">Sıfırla</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Bu checkbox işaretlenince formu JS ile otomatik gönderiyor (onchange="this.form.submit()"),
+                 "Filtrele" butonuna basmaya gerek kalmadan anında filtreliyor -->
+            <div class="form-check form-switch mt-2 ps-0">
+                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" name="sadeceStoktaOlanlar" id="sadeceStoktaOlanlar" value="true"
+                @(ViewBag.SadeceStoktaOlanlar == true ? "checked" : "") onchange="this.form.submit()">
+                <label class="form-check-label text-muted small" for="sadeceStoktaOlanlar">Sadece stokta olanları göster (tükenenleri gizle)</label>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. TABLO BÖLÜMÜ -->
+
+<h5 class="font-baslik mb-3">Ürün Listesi</h5>
+<div class="card bg-transparent border-secondary shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-custom-dark align-middle mb-0" style="--bs-table-bg: transparent;">
+                <thead class="text-muted small border-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">
+                    <tr>
+                        <!-- Sıralanabilir başlıklar: her biri ViewData["...Siralama"]'daki hazır
+                             "bir sonraki tıklamada gidilecek değeri" kullanarak toggle yapıyor
+                             (bkz. UrunController.Index içindeki sıralama bloğu) -->
+                        <th class="ps-3 py-3">
+                            <a asp-action="Index" asp-route-sortOrder="@ViewData["AdSiralama"]" asp-route-searchString="@ViewData["SearchString"]" asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]" asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar" class="text-muted text-decoration-none">
+                                ÜRÜN <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                            </a>
+                        </th>
+                        <th class="py-3">MODEL / ÖZELLİK</th>
+                        <th class="py-3">
+                            <a asp-action="Index" asp-route-sortOrder="@ViewData["StokSiralama"]" asp-route-searchString="@ViewData["SearchString"]" asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]" asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar" class="text-muted text-decoration-none">
+                                STOK DURUMU <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                            </a>
+                        </th>
+                        <th class="py-3">KATEGORİ</th>
+                        <th class="py-3">
+                            <a asp-action="Index" asp-route-sortOrder="@ViewData["DepartmanSiralama"]" asp-route-searchString="@ViewData["SearchString"]" asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]" asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar" class="text-muted text-decoration-none">
+                                DEPARTMAN <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                            </a>
+                        </th>
+                        <th class="pe-3 text-end py-3">İŞLEMLER</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        // Departman ismi sınırsız sayıda olabileceği için (kullanıcı istediği zaman
+                        // yeni bir departman adı girebiliyor), her departmana sabit bir renk atamak
+                        // yerine, ismin harflerinin toplamını 8'e bölerek (basit bir "hash") 8 renkten
+                        // birini seçiyoruz. Böylece aynı departman ismi HER ZAMAN aynı rengi alır,
+                        // ama kodda "IT = sarı" gibi sabit bir eşleme yazmamıza gerek kalmaz.
+                        int renkIndex = string.IsNullOrEmpty(item.Departman) ? 0 : item.Departman.Sum(c => (int)c) % 8;
+                        string satirSinif = $"iplik-satir-renk-{renkIndex}";
+                        <tr class="border-secondary @satirSinif">
+                            <td class="ps-3">
+                                <strong class="text-light">@Html.DisplayFor(modelItem => item.UrunAdi)</strong><br>
+                                <small class="text-muted">@Html.DisplayFor(modelItem => item.Marka)</small>
+                            </td>
+                            <td>
+                                <span class="text-light">@Html.DisplayFor(modelItem => item.Model)</span><br>
+                                <small class="text-muted">@Html.DisplayFor(modelItem => item.Ozellikler)</small>
+                            </td>
+                            <td>
+                                @{
+                                    // Stok miktarına göre 4 seviyeli durum belirleme (Tükendi/Kritik/Azalıyor/Yeterli).
+                                    // "doluOran" gerçek bir yüzde değil (elimizde "maksimum kapasite" bilgisi yok),
+                                    // sadece durumun ciddiyetini görsel olarak anlatan sabit bir doluluk seviyesi.
+                                    string durumSinif, hapSinif, hapMetin;
+                                    double doluOran;
+                                    if (item.StokMiktari == 0) { durumSinif = "stok-durum-tukendi"; hapSinif = "durum-tukendi"; hapMetin = "TÜKENDİ"; doluOran = 0.0; }
+                                    else if (item.StokMiktari <= 2) { durumSinif = "stok-durum-kritik"; hapSinif = "durum-kritik"; hapMetin = "KRİTİK STOK"; doluOran = 0.15; }
+                                    else if (item.StokMiktari <= 5) { durumSinif = "stok-durum-azaliyor"; hapSinif = "durum-azaliyor"; hapMetin = "AZALIYOR"; doluOran = 0.5; }
+                                    else { durumSinif = "stok-durum-yeterli"; hapSinif = "durum-yeterli"; hapMetin = "YETERLİ"; doluOran = 0.85; }
+
+                                    // SVG çemberin çevresi (2 * π * r, r=10) sabit 62.8; dashoffset ise
+                                    // "ne kadarının BOŞ görüneceğini" belirliyor, o yüzden (1 - doluOran) ile çarpılıyor.
+                                    double cevre = 62.8;
+                                    double dashoffset = cevre * (1 - doluOran);
+                                }
+                                <div class="stok-hucre @durumSinif">
+                                    <svg class="bobin-cember" viewBox="0 0 26 26">
+                                        <circle class="track" cx="13" cy="13" r="10" />
+                                        <circle class="fill" cx="13" cy="13" r="10" stroke-dasharray="@cevre.ToString("F1")" stroke-dashoffset="@dashoffset.ToString("F1")" />
+                                    </svg>
+                                    <span class="miktar">@item.StokMiktari @item.Birim</span>
+                                    <span class="durum-hap @hapSinif">@hapMetin</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-light">@Html.DisplayFor(modelItem => item.Kategori.KategoriAdi)</span>
+                            </td>
+                            <td>
+                                <!-- Yukarıda hesaplanan renkIndex burada da kullanılıyor, böylece
+                                     satırın sol kenar rengiyle departman etiketinin rengi eşleşiyor -->
+                                <span class="iplik-etiket iplik-renk-@renkIndex"><span class="iplik-nokta"></span>@item.Departman</span>
+                            </td>
+                            <td class="pe-3 text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    @if (userRole != "Izleyici")
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary text-light px-2 py-1 border-secondary" title="Düzenle">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    }
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary text-light px-2 py-1 border-secondary mx-1" title="İncele">
+                                        <i class="bi bi-three-dots"></i>
+                                    </a>
+                                    @if (userRole != "Izleyici")
+                                    {
+                                        <a asp-action="Transfer" asp-route-id="@item.Id" class="btn btn-outline-secondary text-light px-2 py-1 border-secondary me-1" title="Transfer">
+                                            <i class="bi bi-arrow-left-right"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-secondary text-danger px-2 py-1 border-secondary" title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@{
+    int suankiSayfa = (int)(ViewData["SuankiSayfa"] ?? 1);
+    int toplamSayfa = (int)(ViewData["ToplamSayfa"] ?? 1);
+}
+@if (toplamSayfa > 1)
+{
+    <!-- Sayfa gezinme çubuğu: sadece 1'den fazla sayfa varsa görünür.
+         Her link mevcut arama/filtre/sıralama değerlerini de query string'e ekliyor,
+         böylece sayfa değiştirince filtre sıfırlanmıyor. -->
+    <nav class="mt-3 d-flex justify-content-center">
+        <ul class="pagination pagination-sm">
+            <li class="page-item @(suankiSayfa <= 1 ? "disabled" : "")">
+                <a class="page-link bg-dark text-light border-secondary" asp-action="Index"
+                   asp-route-sayfa="@(suankiSayfa - 1)"
+                   asp-route-sortOrder="@ViewData["CurrentSort"]"
+                   asp-route-searchString="@ViewData["SearchString"]"
+                   asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]"
+                   asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar">‹</a>
+            </li>
+            @for (int i = 1; i <= toplamSayfa; i++)
+            {
+                <li class="page-item @(i == suankiSayfa ? "active" : "")">
+                    <a class="page-link @(i == suankiSayfa ? "bg-warning text-dark border-warning fw-bold" : "bg-dark text-light border-secondary")" asp-action="Index"
+                       asp-route-sayfa="@i"
+                       asp-route-sortOrder="@ViewData["CurrentSort"]"
+                       asp-route-searchString="@ViewData["SearchString"]"
+                       asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]"
+                       asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar">@i</a>
+                </li>
+            }
+            <li class="page-item @(suankiSayfa >= toplamSayfa ? "disabled" : "")">
+                <a class="page-link bg-dark text-light border-secondary" asp-action="Index"
+                   asp-route-sayfa="@(suankiSayfa + 1)"
+                   asp-route-sortOrder="@ViewData["CurrentSort"]"
+                   asp-route-searchString="@ViewData["SearchString"]"
+                   asp-route-departmanFiltre="@ViewData["DepartmanFiltre"]"
+                   asp-route-sadeceStoktaOlanlar="@ViewBag.SadeceStoktaOlanlar">›</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // "Diğer" departman kutusundaki tooltip'i (Bootstrap Popover) aktif ediyor —
+        // Bootstrap varsayılan olarak popover'ları otomatik başlatmadığı için elle tetiklemek gerekiyor.
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+        var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl)
+        });
+
+        // Üstteki "Canlı Saat" kutucuğunu her saniye günceller (sunucudan değil, tarayıcı saatinden okur).
+        function tarihSaatGuncelle() {
+            const simdi = new Date();
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const eleman = document.getElementById('canliTarihSaat');
+            if (eleman) {
+                eleman.innerText = simdi.toLocaleDateString('tr-TR', options);
+            }
+        }
+        setInterval(tarihSaatGuncelle, 1000);
+        tarihSaatGuncelle();
+    </script>
+}

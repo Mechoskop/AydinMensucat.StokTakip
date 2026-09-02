@@ -1,0 +1,76 @@
+﻿@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap - Aydın Mensucat Depo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+            body.login-body {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: var(--bg-koyu);
+                background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 9px), repeating-linear-gradient(-45deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 9px);
+            }
+
+            .login-kart {
+                width: 380px;
+                background-color: var(--bg-kart);
+                border: 1px solid var(--border-renk);
+                border-radius: 16px;
+                padding: 36px 34px 30px;
+            }
+    </style>
+</head>
+<body class="login-body text-light">
+
+    <div class="login-kart">
+        <div class="text-center mb-4">
+            <small class="text-muted" style="letter-spacing: 2px; font-size: 0.7rem;">DEPO DEFTERİ</small>
+            <h2 class="font-baslik mb-0 mt-1">Aydın <span class="text-sari fst-italic">Mensucat</span></h2>
+            <small class="text-muted">Stok &amp; Envanter Yönetim Paneli</small>
+        </div>
+
+        <hr class="dikis-cizgi" style="margin: 20px 0;">
+
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3 text-center"></div>
+
+            <div class="form-group mb-3">
+                <label class="control-label text-muted small fw-semibold">KULLANICI ADI</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-person"></i></span>
+                    <input type="text" name="kullaniciAdi" class="form-control bg-dark text-light border-secondary" placeholder="Kullanıcı adınızı giriniz" required autofocus />
+                </div>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="control-label text-muted small fw-semibold">ŞİFRE</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark text-muted border-secondary"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="sifre" class="form-control bg-dark text-light border-secondary" placeholder="Şifrenizi giriniz" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-warning text-dark fw-bold w-100 py-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Giriş Yap
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

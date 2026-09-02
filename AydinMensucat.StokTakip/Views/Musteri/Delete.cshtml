@@ -1,0 +1,28 @@
+﻿@model AydinMensucat.StokTakip.Models.Musteri
+@{
+    ViewData["Title"] = "Müşteri Sil";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Müşteri Sil",
+    Tehlike = true,
+    AltBaslik = "Bu müşteriyi silmek istediğinize emin misiniz? Geçmiş sevkiyat kayıtları silinmeyecek, sadece müşteri bilgisi boşalacak."
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4 mb-3">
+            <p class="mb-2"><strong class="text-muted">Firma / Müşteri Adı:</strong> <span class="text-light">@Model.MusteriAdi</span></p>
+            <p class="mb-2"><strong class="text-muted">Yetkili Kişi:</strong> <span class="text-light">@Model.YetkiliKisi</span></p>
+            <p class="mb-0"><strong class="text-muted">Telefon:</strong> <span class="text-light">@Model.Telefon</span></p>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-outline-danger fw-bold px-4">Sil</button>
+            <a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,145 @@
+﻿@{
+    ViewData["Title"] = "Stok Raporları ve Grafikler";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            @await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+            {
+                DuzMetin = "Aylık Stok ",
+                VurguMetin = "Giriş Raporu",
+                AltBaslik = "Zaman içindeki stok giriş hareketlerinin analitiği"
+            })
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <div class="input-group input-group-sm" style="width: 195px;">
+                <label class="input-group-text bg-dark text-light border-secondary" for="departmanSecim">Departman</label>
+                <select id="departmanSecim" class="form-select bg-dark text-light border-secondary" onchange="grafigiGuncelle()">
+                    <option value="">Tümü</option>
+                    @foreach (var d in (List<string>)ViewBag.Departmanlar)
+                    {
+                        <option value="@d">@d</option>
+                    }
+                </select>
+            </div>
+
+            <div class="input-group input-group-sm" style="width: 195px;">
+                <label class="input-group-text bg-dark text-light border-secondary" for="birimSecim">Birim</label>
+                <select id="birimSecim" class="form-select bg-dark text-light border-secondary" onchange="grafigiGuncelle()">
+                    <option value="">Tümü</option>
+                    <option value="adet">Adet</option>
+                    <option value="kg">Kilogram (kg)</option>
+                    <option value="metre">Metre</option>
+                    <option value="rulo">Rulo</option>
+                </select>
+            </div>
+
+            <div class="input-group input-group-sm" style="width: 195px;">
+                <label class="input-group-text bg-dark text-light border-secondary" for="grafikTipi">Tip</label>
+                <select id="grafikTipi" class="form-select bg-dark text-light border-secondary" onchange="grafigiGuncelle()">
+                    <option value="bar">Sütun (Bar)</option>
+                    <option value="line">Çizgi (Line)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <hr class="dikis-cizgi" />
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card bg-transparent border-secondary shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 text-light">Seçilen Birime / Departmana Göre Aylık Stok Giriş Miktarları</h5>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 400px; width: 100%;">
+                        <canvas id="stokGrafik"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-action="Index" class="btn btn-outline-secondary text-light"><i class="bi bi-arrow-left"></i> Ürün Listesine Dön</a>
+    </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        Chart.defaults.color = '#a09fa5';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+
+        let myChart = null;
+
+        function grafigiGuncelle() {
+            const secilenBirim = document.getElementById('birimSecim').value;
+            const grafikTipi = document.getElementById('grafikTipi').value;
+            const secilenDepartman = document.getElementById('departmanSecim').value;
+
+            const params = new URLSearchParams();
+            if (secilenBirim) params.append('birimFiltre', secilenBirim);
+            if (secilenDepartman) params.append('departmanFiltre', secilenDepartman);
+
+            const url = `/Urun/GetAylikStokVerileri?${params.toString()}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const aylar = data.map(item => item.ayYil);
+                    const miktarlar = data.map(item => item.toplamMiktar);
+
+                    const ctx = document.getElementById('stokGrafik').getContext('2d');
+
+                    if (myChart) {
+                        myChart.destroy();
+                    }
+
+                    let etiket = 'Genel Toplam Miktar';
+                    if (secilenBirim && secilenDepartman) etiket = `${secilenDepartman} · ${secilenBirim.toUpperCase()}`;
+                    else if (secilenBirim) etiket = `Aylık Toplam Miktar (${secilenBirim.toUpperCase()})`;
+                    else if (secilenDepartman) etiket = `${secilenDepartman} Departmanı Toplamı`;
+
+                    myChart = new Chart(ctx, {
+                        type: grafikTipi,
+                        data: {
+                            labels: aylar,
+                            datasets: [{
+                                label: etiket,
+                                data: miktarlar,
+                                backgroundColor: 'rgba(229, 179, 74, 0.65)',
+                                borderColor: 'rgba(229, 179, 74, 1)',
+                                borderWidth: 2,
+                                borderRadius: grafikTipi === 'bar' ? 6 : 0,
+                                pointBackgroundColor: 'rgba(229, 179, 74, 1)',
+                                pointRadius: grafikTipi === 'line' ? 4 : 0,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { labels: { color: '#ffffff' } }
+                            },
+                            scales: {
+                                x: { grid: { color: 'rgba(255,255,255,0.06)' } },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255,255,255,0.06)' },
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            grafigiGuncelle();
+        });
+    </script>
+}

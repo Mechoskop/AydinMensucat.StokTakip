@@ -1,0 +1,41 @@
+@model AydinMensucat.StokTakip.Models.Kategori
+@{
+    ViewData["Title"] = "Kategori Sil";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Kategori Sil",
+    Tehlike = true
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        @if (Model.Urunler.Any())
+        {
+            <div class="alert alert-danger bg-dark border-danger text-light" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Bu kategoride <strong>@Model.Urunler.Count</strong> ürün var. Silmeden önce bu ürünleri başka bir kategoriye taşımanız gerekiyor.
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Bu kategoriyi silmek istediğinize emin misiniz?</p>
+        }
+
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4 mb-3">
+            <p class="mb-2"><strong class="text-muted">Kategori Adı:</strong> <span class="text-light">@Model.KategoriAdi</span></p>
+            <p class="mb-0"><strong class="text-muted">Açıklama:</strong> <span class="text-light">@Model.Aciklama</span></p>
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            @if (!Model.Urunler.Any())
+            {
+                <button type="submit" class="btn btn-outline-danger fw-bold px-4">Sil</button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+        </form>
+    </div>
+</div>

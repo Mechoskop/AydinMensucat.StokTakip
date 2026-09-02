@@ -1,0 +1,162 @@
+﻿@{
+    ViewData["Title"] = "Ana Menü";
+    var bugun = DateTime.Now;
+    var ayBaslangic = new DateTime(bugun.Year, bugun.Month, 1);
+    var ayGunSayisi = DateTime.DaysInMonth(bugun.Year, bugun.Month);
+    int ilkGunHaftaIndex = ((int)ayBaslangic.DayOfWeek + 6) % 7; // Pazartesi = 0
+    string[] ayIsimleri = { "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık" };
+    string[] gunIsimleri = { "Pzt", "Sal", "Çrş", "Per", "Cuma", "Cts", "Pzr" };
+}
+
+<div class="mb-4">
+    @await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+    {
+        DuzMetin = "Hoş geldin, ",
+        VurguMetin = ViewBag.KullaniciAdi,
+        AltBaslik = "Aydın Mensucat Depo ve Envanter Yönetim Paneli"
+    })
+</div>
+
+<hr class="dikis-cizgi">
+
+<div class="row g-3 mb-4">
+    <!-- Analog Saat -->
+    <div class="col-md-4">
+        <div class="widget-kart text-center">
+            <div class="text-muted small fw-semibold mb-3">SAAT</div>
+            <svg viewBox="0 0 200 200" width="150" height="150" class="mx-auto d-block">
+                <circle cx="100" cy="100" r="96" fill="var(--bg-koyu)" stroke="var(--border-renk)" stroke-width="2" />
+                @{
+                    // Ondalık sayıları SVG'nin anlayacağı formatta (nokta ile) yazdırmak için
+                    // Türkçe kültür ayarını (virgüllü) değil, "InvariantCulture"ı zorluyoruz.
+                    var kultur = System.Globalization.CultureInfo.InvariantCulture;
+                }
+                @for (int i = 0; i < 12; i++)
+                {
+                    double aci = i * 30 * Math.PI / 180;
+                    double x1 = 100 + 82 * Math.Sin(aci);
+                    double y1 = 100 - 82 * Math.Cos(aci);
+                    double x2 = 100 + 92 * Math.Sin(aci);
+                    double y2 = 100 - 92 * Math.Cos(aci);
+                    <line x1="@x1.ToString("F1", kultur)" y1="@y1.ToString("F1", kultur)" x2="@x2.ToString("F1", kultur)" y2="@y2.ToString("F1", kultur)" stroke="var(--sari-vurgu)" stroke-width="3" stroke-linecap="round" />
+                }
+                <line id="saatKolu" x1="100" y1="100" x2="100" y2="55" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                <line id="dakikaKolu" x1="100" y1="100" x2="100" y2="35" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" />
+                <line id="saniyeKolu" x1="100" y1="100" x2="100" y2="25" stroke="var(--sari-vurgu)" stroke-width="1.5" stroke-linecap="round" />
+                <circle cx="100" cy="100" r="4" fill="var(--sari-vurgu)" />
+            </svg>
+            <div id="dijitalSaat" class="mt-3 text-sari" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700;"></div>
+        </div>
+    </div>
+
+    <!-- Mini Takvim -->
+    <div class="col-md-4">
+        <div class="widget-kart">
+            <div class="text-muted small fw-semibold mb-3 text-center">@ayIsimleri[bugun.Month - 1].ToUpper() @bugun.Year</div>
+            <table class="mini-takvim">
+                <thead>
+                    <tr>
+                        @foreach (var g in gunIsimleri)
+                        {
+                            <th>@g</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int gun = 1;
+                        int toplamHucre = ilkGunHaftaIndex + ayGunSayisi;
+                        int satirSayisi = (int)Math.Ceiling(toplamHucre / 7.0);
+                    }
+                    @for (int satir = 0; satir < satirSayisi; satir++)
+                    {
+                        <tr>
+                            @for (int sutun = 0; sutun < 7; sutun++)
+                            {
+                                int hucreIndex = satir * 7 + sutun;
+                                if (hucreIndex < ilkGunHaftaIndex || gun > ayGunSayisi)
+                                {
+                                    <td class="bos">-</td>
+                                }
+                                else
+                                {
+                                    <td class="@(gun == bugun.Day ? "bugun" : "")">@gun</td>
+                                    gun++;
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Hava Durumu (Dekoratif) -->
+    <div class="col-md-4">
+        <div class="widget-kart text-center d-flex flex-column justify-content-center">
+            <div class="text-muted small fw-semibold mb-3">HAVA DURUMU</div>
+            <i id="havaIkon" class="bi bi-cloud-sun" style="font-size: 52px; color: var(--sari-vurgu);"></i>
+            <div class="mt-3 fw-semibold">İstanbul</div>
+            <div class="text-muted small mt-1">Bugün çalışmak için güzel bir gün ✨</div>
+        </div>
+    </div>
+</div>
+
+<hr class="dikis-cizgi">
+
+<h5 class="font-baslik mb-3 text-center">Hızlı Erişim</h5>
+<div class="hizli-erisim-grid">
+    <a asp-controller="Urun" asp-action="Index" class="hizli-erisim-tile">
+        <i class="bi bi-grid"></i> Ürün Listesi
+    </a>
+    <a asp-controller="Urun" asp-action="Create" class="hizli-erisim-tile">
+        <i class="bi bi-plus-lg"></i> Yeni Ürün
+    </a>
+    <a asp-controller="Urun" asp-action="Raporlar" class="hizli-erisim-tile">
+        <i class="bi bi-bar-chart-line"></i> Grafik Raporları
+    </a>
+    <a asp-controller="Urun" asp-action="StokHareketleri" class="hizli-erisim-tile">
+        <i class="bi bi-clock-history"></i> Stok Geçmişi
+    </a>
+    <a asp-controller="Kategori" asp-action="Index" class="hizli-erisim-tile">
+        <i class="bi bi-tags"></i> Kategoriler
+    </a>
+    <a asp-controller="Tedarikci" asp-action="Index" class="hizli-erisim-tile">
+        <i class="bi bi-building"></i> Tedarikçiler
+    </a>
+    <a asp-controller="Musteri" asp-action="Index" class="hizli-erisim-tile">
+        <i class="bi bi-people"></i> Müşteriler
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        function saatiGuncelle() {
+            const simdi = new Date();
+            const saat = simdi.getHours() % 12;
+            const dakika = simdi.getMinutes();
+            const saniye = simdi.getSeconds();
+
+            const saatDeg = (saat + dakika / 60) * 30;
+            const dakikaDeg = (dakika + saniye / 60) * 6;
+            const saniyeDeg = saniye * 6;
+
+            document.getElementById('saatKolu').setAttribute('transform', `rotate(${saatDeg} 100 100)`);
+            document.getElementById('dakikaKolu').setAttribute('transform', `rotate(${dakikaDeg} 100 100)`);
+            document.getElementById('saniyeKolu').setAttribute('transform', `rotate(${saniyeDeg} 100 100)`);
+
+            const dijital = document.getElementById('dijitalSaat');
+            if (dijital) {
+                dijital.innerText = simdi.toLocaleTimeString('tr-TR');
+            }
+
+            const saatSimdi = simdi.getHours();
+            const havaIkon = document.getElementById('havaIkon');
+            if (havaIkon) {
+                havaIkon.className = (saatSimdi >= 7 && saatSimdi < 19) ? 'bi bi-cloud-sun' : 'bi bi-moon-stars';
+            }
+        }
+        setInterval(saatiGuncelle, 1000);
+        saatiGuncelle();
+    </script>
+}

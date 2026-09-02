@@ -1,0 +1,21 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+}
+
+<div class="text-center py-5">
+    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+    <h2 class="font-baslik text-danger mt-3">Bir şeyler ters gitti</h2>
+    <p class="text-muted">İsteğiniz işlenirken beklenmeyen bir hata oluştu.</p>
+
+    @if (Model.ShowRequestId)
+    {
+        <p class="text-muted small">
+            <strong>Request ID:</strong> <code class="text-sari">@Model.RequestId</code>
+        </p>
+    }
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-warning text-dark fw-bold mt-3">
+        <i class="bi bi-house-door"></i> Ana Menü'ye Dön
+    </a>
+</div>

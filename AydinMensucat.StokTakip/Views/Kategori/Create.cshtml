@@ -1,0 +1,39 @@
+@model AydinMensucat.StokTakip.Models.Kategori
+@{
+    ViewData["Title"] = "Yeni Kategori Ekle";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Yeni ",
+    VurguMetin = "Kategori Ekle",
+    AltBaslik = "Örn: Bilgisayar & Donanım, Hammadde & Malzeme"
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="KategoriAdi" class="control-label text-muted small fw-semibold">KATEGORİ ADI</label>
+                    <input asp-for="KategoriAdi" class="form-control bg-dark text-light border-secondary" />
+                    <span asp-validation-for="KategoriAdi" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Aciklama" class="control-label text-muted small fw-semibold">AÇIKLAMA</label>
+                    <input asp-for="Aciklama" class="form-control bg-dark text-light border-secondary" />
+                    <span asp-validation-for="Aciklama" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4"><i class="bi bi-check-circle"></i> Kaydet</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary text-light"><i class="bi bi-arrow-left"></i> Listeye Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

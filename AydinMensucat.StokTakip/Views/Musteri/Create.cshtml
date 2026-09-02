@@ -1,0 +1,45 @@
+﻿@model AydinMensucat.StokTakip.Models.Musteri
+@{
+    ViewData["Title"] = "Yeni Müşteri Ekle";
+}
+
+@await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+{
+    DuzMetin = "Yeni ",
+    VurguMetin = "Müşteri Kartı",
+    AltBaslik = "Ürün sevk edeceğin yeni bir firma tanımla"
+})
+<hr class="dikis-cizgi" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-transparent border-secondary shadow-sm rounded-4 p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="MusteriAdi" class="control-label text-muted small fw-semibold">FİRMA / MÜŞTERİ ADI</label>
+                    <input asp-for="MusteriAdi" class="form-control bg-dark text-light border-secondary" />
+                    <span asp-validation-for="MusteriAdi" class="text-danger small"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="YetkiliKisi" class="control-label text-muted small fw-semibold">YETKİLİ KİŞİ</label>
+                    <input asp-for="YetkiliKisi" class="form-control bg-dark text-light border-secondary" />
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Telefon" class="control-label text-muted small fw-semibold">TELEFON</label>
+                    <input asp-for="Telefon" class="form-control bg-dark text-light border-secondary" />
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Adres" class="control-label text-muted small fw-semibold">ADRES</label>
+                    <input asp-for="Adres" class="form-control bg-dark text-light border-secondary" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4">Kaydet</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary text-light">Listeye Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

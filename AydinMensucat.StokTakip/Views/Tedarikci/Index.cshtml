@@ -1,0 +1,68 @@
+﻿@model IEnumerable<AydinMensucat.StokTakip.Models.Tedarikci>
+
+@{
+    ViewData["Title"] = "Tedarikçiler";
+    var rol = Context.Session.GetString("UserRole");
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        @await Html.PartialAsync("_SayfaBasligi", new SayfaBasligiModel
+        {
+            DuzMetin = "Tedarikçi ",
+            VurguMetin = "Firmalar",
+            AltBaslik = "Hammadde ve ekipman aldığın firmalar"
+        })
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Urun" asp-action="Index" class="btn btn-outline-secondary text-light"><i class="bi bi-arrow-left"></i> Ürün Listesine Dön</a>
+        @if (rol != "Izleyici")
+        {
+            <a asp-action="Create" class="btn btn-warning text-dark fw-bold">+ Yeni Tedarikçi Ekle</a>
+        }
+    </div>
+</div>
+
+<hr class="dikis-cizgi" />
+
+<div class="card bg-transparent border-secondary shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark align-middle mb-0" style="--bs-table-bg: transparent;">
+                <thead class="text-muted small border-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">
+                    <tr>
+                        <th class="ps-3 py-3">ŞİRKET ADI</th>
+                        <th class="py-3">YETKİLİ KİŞİ</th>
+                        <th class="py-3">TELEFON</th>
+                        <th class="py-3">ADRES</th>
+                        <th class="pe-3 py-3 text-end">İŞLEMLER</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="border-secondary">
+                            <td class="ps-3"><strong class="text-light">@item.SirketAdi</strong></td>
+                            <td class="text-light">@item.YetkiliKisi</td>
+                            <td class="text-light">@item.Telefon</td>
+                            <td class="text-muted">@item.Adres</td>
+                            <td class="pe-3 text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    @if (rol != "Izleyici")
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="icon-btn" title="Düzenle"><i class="bi bi-pencil"></i></a>
+                                    }
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="icon-btn mx-1" title="İncele"><i class="bi bi-three-dots"></i></a>
+                                    @if (rol != "Izleyici")
+                                    {
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="icon-btn danger" title="Sil"><i class="bi bi-trash"></i></a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
